@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Polygon-Drawer</title>
+</head>
+<body>
+    <div>
+        <h1>Polygon-Drawer</h1>
+        <input type="button" value="Yellow" id="yellow"/>
+        <input type="button" value="Blue" id="blue"/>
+        <input type="button" value="Black"  id="black"/>
+        <input type="button" value="ClearCanvas" id = 'clearbtn'/>
+    </div>
+    <style type="text/css">
+        h1{
+            color :#000000;
+            font-family: "Adobe 黑体 Std R";
+            margin-top: 2px;
+            margin-left: 200px;
+            position: absolute;
+        }
+        canvas{
+            margin-left: 100px;
+            margin-top: 50px;
+        }
+        #clearbtn{
+            margin-top: 20px;
+            margin-left: 800px;
+            position: absolute;
+        }
+        #yellow{
+            margin-top: 20px;
+            margin-left: 700px;
+            position: absolute;
+            background-color: yellow;
+            border:1px solid black;
+        }
+        #blue{
+            margin-top: 20px;
+            margin-left: 600px;
+            position: absolute;
+            background-color: blue;
+            border:1px solid black;
+        }
+        #black{
+            margin-top: 20px;
+            margin-left: 500px;
+            position: absolute;
+            background-color: white;
+            border: 3px dashed red;
+        }
+    </style>
+    <canvas  width="800px" height ="600px"></canvas>
+    <script>
+        //清空画布按钮相关设置
+        let btn = document.getElementById('clearbtn');
+        btn.onclick = function(event) {
+            pointscurrent.length=0;
+            previewpoint.length=0;
+            setTimeout(function (){alert("canvas cleared!")},100);
+            btn.style.backgroundColor= 'yellow';
+            btn.style.backgroundColor = '';
+            btn.style.border = "3px dashed blue";
+        }
+        btn.onmouseenter = function(event) {
+            btn.style.backgroundColor = 'yellow';
+        }
+
+
+        //画线颜色变动按钮相关设置
+        let yellowlinebtn = document.getElementById('yellow');
+        yellowlinebtn.onclick = function(event) {
+            ctx.strokeStyle = "yellow";
+            blacklinebtn.style.border = "1px solid black";
+            bluelinebtn.style.border = "1px solid black";
+            yellowlinebtn.style.backgroundColor = '';
+            yellowlinebtn.style.border = "3px dashed red";
+        }
+
+        let bluelinebtn = document.getElementById('blue');
+        bluelinebtn.onclick = function(event) {
+            ctx.strokeStyle = "blue";
+            blacklinebtn.style.border = "1px solid black";
+            yellowlinebtn.style.border = "1px solid black";
+            bluelinebtn.style.backgroundColor = '';
+            bluelinebtn.style.border = "3px dashed red";
+        }
+
+        let blacklinebtn = document.getElementById('black');
+        blacklinebtn.onclick = function(event) {
+            ctx.strokeStyle = "black";
+            yellowlinebtn.style.border = "1px solid black";
+            bluelinebtn.style.border = "1px solid black";
+            blacklinebtn.style.backgroundColor = '';
+            blacklinebtn.style.border = "3px dashed red";
+        }
+
+        let canvas = document.querySelector("canvas");
+        pointscurrent = [];//[[x0,y0],[x1,y1]]
+        previewpoint = [];
+        let stopdraw = false;
+        //事件处理程序管理工具
+        let EventUtil = {
+            addHandler: function(element,type,handler) {
+                if (element.addEventListener){
+                    element.addEventListener(type, handler, false);
+                }else{
+                    element["on"+type]=handler;
+                }
+            },
+            removeHandler: function(element,type,handler) {
+                if (element.removeEventListener){
+                    element.removeEventListener(type, handler, false);
+                }else{
+                    element["on"+type]=null;
+                }
+            },
+            /*
+            getEvent: function(event){
+                return event? event : window.event;
+            }
+            */
+
+        }
+
+        //利用EventUtil为事件分配处理函数
+        EventUtil.addHandler(canvas,"mouseup",onMouseUp);
+        EventUtil.addHandler(canvas,"mousemove",onMouseMove);
+        EventUtil.addHandler(canvas,"dblclick",onDoubleClick);
+        EventUtil.addHandler(canvas,"mousedown",onMouseDown);
+        EventUtil.addHandler(canvas, "contextmenu", (evt) => evt.preventDefault());
+        EventUtil.addHandler(canvas,"load",onLoad);
+
+        function onLoad(event) {
+            console.log('canvas successfully loaded');
+        }
+
+        /**
+         *
+         * @param event
+         */
+        function onMouseUp(event){
+           // pointscurrent.push([event.offsetX,event.offsetY]);
+        }
+
+        /**
+         * mouseup做一个preview
+         * @param event
+         */
+        function onMouseMove(event) {
+            if(pointscurrent.length>=1) {
+                previewpoint[0]=event.offsetX;
+                previewpoint[1]=event.offsetY;
+            }
+        }
+
+        /**
+         *
+         * @param event
+         */
+        function onDoubleClick(event) {
+            //alert(event.offsetX+" "+event.offsetY);
+        }
+
+        function onMouseDown(event) {
+            if(event.button == 0) {
+                if(stopdraw){
+                    stopdraw = false;
+                }
+                pointscurrent.push([event.offsetX, event.offsetY]);
+            }
+            else if(event.button == 2){
+                pointscurrent.pop();
+                stopdraw = true;
+            }
+        }
+
+        let ctx = canvas.getContext('2d');
+        ctx.strokeStyle = "black"
+
+        /**
+         *
+         */
+        function draw() {
+            if(pointscurrent.length<1){
+                ctx.clearRect(0,0,800,600);
+            }
+            else {
+                ctx.clearRect(0,0,800,600);
+                ctx.beginPath();
+                ctx.moveTo(pointscurrent[0][0],pointscurrent[0][1]);
+                for(let x = 1; x<pointscurrent.length; x++) {
+                    ctx.lineTo(pointscurrent[x][0],pointscurrent[x][1]);
+                }
+                if(!stopdraw) {
+                    ctx.lineTo(previewpoint[0], previewpoint[1]);
+                }
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
+
+        function animate() {
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+    </script>
+    <style type = "text/css">
+        canvas {
+            border: 1px solid black;
+        }
+       </style >
+</body>
+</html>
