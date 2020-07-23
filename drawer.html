@@ -99,7 +99,10 @@
         let canvas = document.querySelector("canvas");
         pointscurrent = [];//[[x0,y0],[x1,y1]]
         previewpoint = [];
+        restartcheckpoint = [];//记录每个新的多边形的起始点
+        let currentlooker=0;
         let stopdraw = false;
+        let restartsignal = true;//preview重新有效的signal
         //事件处理程序管理工具
         let EventUtil = {
             addHandler: function(element,type,handler) {
@@ -125,9 +128,9 @@
         }
 
         //利用EventUtil为事件分配处理函数
-        EventUtil.addHandler(canvas,"mouseup",onMouseUp);
+        //EventUtil.addHandler(canvas,"mouseup",onMouseUp);
         EventUtil.addHandler(canvas,"mousemove",onMouseMove);
-        EventUtil.addHandler(canvas,"dblclick",onDoubleClick);
+        //EventUtil.addHandler(canvas,"dblclick",onDoubleClick);
         EventUtil.addHandler(canvas,"mousedown",onMouseDown);
         EventUtil.addHandler(canvas, "contextmenu", (evt) => evt.preventDefault());
         EventUtil.addHandler(canvas,"load",onLoad);
@@ -137,30 +140,18 @@
         }
 
         /**
-         *
-         * @param event
-         */
-        function onMouseUp(event){
-           // pointscurrent.push([event.offsetX,event.offsetY]);
-        }
-
-        /**
          * mouseup做一个preview
          * @param event
          */
         function onMouseMove(event) {
-            if(pointscurrent.length>=1) {
+            if(pointscurrent.length>=1&&restartsignal) {
                 previewpoint[0]=event.offsetX;
                 previewpoint[1]=event.offsetY;
+                if(magnettofirst(previewpoint[0],previewpoint[1])){//如果吸附了则preview吸附的情况
+                    previewpoint[0]=pointscurrent[currentlooker][0];
+                    previewpoint[1]=pointscurrent[currentlooker][1];
+                }
             }
-        }
-
-        /**
-         *
-         * @param event
-         */
-        function onDoubleClick(event) {
-            //alert(event.offsetX+" "+event.offsetY);
         }
 
         function onMouseDown(event) {
@@ -168,17 +159,39 @@
                 if(stopdraw){
                     stopdraw = false;
                 }
-                pointscurrent.push([event.offsetX, event.offsetY]);
+                if(pointscurrent.length!=currentlooker&&magnettofirst(event.offsetX,event.offsetY)){
+                    pointscurrent.push([pointscurrent[currentlooker][0],pointscurrent[currentlooker][1]]);
+                    currentlooker = pointscurrent.length;
+                    restartcheckpoint.push(currentlooker);
+                    previewpoint.length=0;
+                    restartsignal=false;//多边形结束，preview暂停
+                }
+                else {
+                    restartsignal=true;//重新加点，preview继续
+                    pointscurrent.push([event.offsetX, event.offsetY]);
+                }
             }
             else if(event.button == 2){
                 pointscurrent.pop();
                 stopdraw = true;
             }
+            console.log(pointscurrent);
+            console.log(currentlooker);
+            console.log(restartcheckpoint);
         }
 
         let ctx = canvas.getContext('2d');
         ctx.strokeStyle = "black"
 
+        //判断是否能吸附到第一个点上，返回一个boolean值
+        function magnettofirst(x,y){
+            if(pointscurrent.length>=3){
+                if((x-pointscurrent[currentlooker][0])**2+(y-pointscurrent[currentlooker][1])**2<30){
+                    return true;
+                }
+            }
+            return false;
+        }
         /**
          *
          */
@@ -191,9 +204,14 @@
                 ctx.beginPath();
                 ctx.moveTo(pointscurrent[0][0],pointscurrent[0][1]);
                 for(let x = 1; x<pointscurrent.length; x++) {
-                    ctx.lineTo(pointscurrent[x][0],pointscurrent[x][1]);
+                    if(restartcheckpoint.indexOf(x)!==-1){
+                        ctx.moveTo(pointscurrent[x][0],pointscurrent[x][1]);
+                    }
+                    else {
+                        ctx.lineTo(pointscurrent[x][0], pointscurrent[x][1]);
+                    }
                 }
-                if(!stopdraw) {
+                if(!stopdraw) {//画preview点
                     ctx.lineTo(previewpoint[0], previewpoint[1]);
                 }
                 ctx.stroke();
