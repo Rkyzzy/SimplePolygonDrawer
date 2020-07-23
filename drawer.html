@@ -58,6 +58,8 @@
         btn.onclick = function(event) {
             pointscurrent.length=0;
             previewpoint.length=0;
+            restartcheckpoint.length=0;
+            init();
             setTimeout(function (){alert("canvas cleared!")},100);
             btn.style.backgroundColor= 'yellow';
             btn.style.backgroundColor = '';
@@ -139,6 +141,12 @@
             console.log('canvas successfully loaded');
         }
 
+
+        function init() {
+            currentlooker=0;
+            stopdraw = false;
+            restartsignal = true;
+        }
         /**
          * mouseup做一个preview
          * @param event
