@@ -6,12 +6,19 @@
 </head>
 <body>
     <div>
-        <h1>Polygon-Drawer</h1>
-        <input type="button" value="Yellow" id="yellow"/>
-        <input type="button" value="Blue" id="blue"/>
-        <input type="button" value="Black"  id="black"/>
-        <input type="button" value="ClearCanvas" id = 'clearbtn'/>
-        <input type="button" value="Dashed" id="dsh"/>
+        <div>
+            <span>
+                <h1>Polygon-Drawer</h1>
+            </span>
+            <span>
+                <input type="button" value="Yellow" id="yellow"/>
+                <input type="button" value="Blue" id="blue"/>
+                <input type="button" value="Black"  id="black"/>
+                <input type="button" value="ClearCanvas" id = 'clearbtn'/>
+                <input type="button" value="Dashed" id="dsh"/>
+                <input type="range" min="1" max="10" id="linewidth" step="1" value="1"/>
+            </span>
+        </div>
         <div>
             <iframe id="polygonframe">
             </iframe>
@@ -19,52 +26,59 @@
     </div>
     <style type="text/css">
         h1{
+            display: inline;
             color :#000000;
+            margin-left: 20px;
             font-family: "Adobe 黑体 Std R";
-            margin-top: 2px;
-            margin-left: 200px;
-            position: absolute;
+            /*margin-top: 2px;*/
+            /*margin-left: 200px;*/
+            /*position: absolute;*/
         }
         canvas{
-            margin-left: 100px;
-            margin-top: 50px;
+            /*margin-left: 100px;*/
+            margin-top: 20px;
         }
         #clearbtn{
-            margin-top: 20px;
-            margin-left: 800px;
-            position: absolute;
+            /*margin-top: 20px;*/
+            /*margin-left: 800px;*/
+            /*position: absolute;*/
         }
         #yellow{
-            margin-top: 20px;
-            margin-left: 700px;
-            position: absolute;
+            /*margin-top: 20px;*/
+            /*margin-left: 700px;*/
+            /*position: absolute;*/
             background-color: yellow;
             border:1px solid black;
         }
         #blue{
-            margin-top: 20px;
-            margin-left: 600px;
-            position: absolute;
+            /*margin-top: 20px;*/
+            /*margin-left: 600px;*/
+            /*position: absolute;*/
             background-color: blue;
             border:1px solid black;
         }
         #black{
-            margin-top: 20px;
-            margin-left: 500px;
-            position: absolute;
+            /*margin-top: 20px;*/
+            /*margin-left: 500px;*/
+            /*position: absolute;*/
             background-color: white;
             border: 3px dashed red;
         }
         #dsh{
-            margin-top: 20px;
-            margin-left: 950px;
-            position: absolute;
+            /*margin-top: 20px;*/
+            /*margin-left: 950px;*/
+            /*position: absolute;*/
             background-color: white;
             border: 1px solid black;
         }
+        #linewidth{
+            /*margin-top: 20px;*/
+            /*margin-left: 1050px;*/
+            /*position: absolute;*/
+        }
         #polygonframe{
-            marginheight: 80px;
-            marginheight: 60px;
+            /*marginheight: 80px;*/
+            /*marginheight: 60px;*/
             position: absolute;
             margin-left: 1000px;
             margin-top: 100px;
@@ -89,7 +103,6 @@
         btn.onmouseenter = function(event) {
             btn.style.backgroundColor = 'yellow';
         }
-
 
         //画线颜色变动按钮相关设置
         let yellowlinebtn = document.getElementById('yellow');
@@ -130,6 +143,13 @@
                 dshbtn.setAttribute('value','Dashed');
             }
         }
+
+        let widthresult = document.getElementById('linewidth');
+        widthresult.onchange = function(event){
+            let widthget = widthresult.value;
+            ctx.lineWidth = parseInt(widthget);
+        }
+
         let canvas = document.querySelector("canvas");
         pointscurrent = [];//[[x0,y0],[x1,y1]]
         previewpoint = [];
