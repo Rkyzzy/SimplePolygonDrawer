@@ -19,10 +19,6 @@
                 <input type="range" min="1" max="10" id="linewidth" step="1" value="1"/>
             </span>
         </div>
-        <div>
-            <iframe id="polygonframe">
-            </iframe>
-        </div>
     </div>
     <style type="text/css">
         h1{
@@ -30,63 +26,47 @@
             color :#000000;
             margin-left: 20px;
             font-family: "Adobe 黑体 Std R";
-            /*margin-top: 2px;*/
-            /*margin-left: 200px;*/
-            /*position: absolute;*/
-        }
-        canvas{
-            /*margin-left: 100px;*/
-            margin-top: 20px;
         }
         #clearbtn{
-            /*margin-top: 20px;*/
-            /*margin-left: 800px;*/
-            /*position: absolute;*/
         }
         #yellow{
-            /*margin-top: 20px;*/
-            /*margin-left: 700px;*/
-            /*position: absolute;*/
             background-color: yellow;
             border:1px solid black;
         }
         #blue{
-            /*margin-top: 20px;*/
-            /*margin-left: 600px;*/
-            /*position: absolute;*/
             background-color: blue;
             border:1px solid black;
         }
         #black{
-            /*margin-top: 20px;*/
-            /*margin-left: 500px;*/
-            /*position: absolute;*/
             background-color: white;
             border: 3px dashed red;
         }
         #dsh{
-            /*margin-top: 20px;*/
-            /*margin-left: 950px;*/
-            /*position: absolute;*/
             background-color: white;
             border: 1px solid black;
         }
         #linewidth{
-            /*margin-top: 20px;*/
-            /*margin-left: 1050px;*/
-            /*position: absolute;*/
         }
-        #polygonframe{
-            /*marginheight: 80px;*/
-            /*marginheight: 60px;*/
-            position: absolute;
-            margin-left: 1000px;
-            margin-top: 100px;
-            scrolling: auto;
-            frameborder: 1;
+        .section {
+            border: 1px solid black;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .canv {
+            display: flex;
+            flex-direction: row;
+            align-items: start;
+            margin-top: 20px;
+        }
+        .canv.section{
+            margin-left: 50px;
         }
     </style>
-    <canvas  width="800px" height ="600px"></canvas>
+    <div class="canv">
+        <canvas  width="800px" height ="600px"></canvas>
+        <span class="section" id="sec"></span>
+    </div>
     <script>
         //清空画布按钮相关设置
         let btn = document.getElementById('clearbtn');
@@ -95,6 +75,8 @@
             previewpoint.length=0;
             restartcheckpoint=[0];
             init();
+            let sec = document.getElementById("sec");
+            sec.children = null;
             setTimeout(function (){alert("canvas cleared!")},100);
             btn.style.backgroundColor= 'yellow';
             btn.style.backgroundColor = '';
@@ -245,9 +227,17 @@
                     currentlooker = pointscurrent.length;
                     restartcheckpoint.push(currentlooker);
                     stopdraw = true;
-                    //let showbutton = document.createElement('input');
-                    //document.getElementById('polygonframe').appendChild(showbutton);
-                    //document.getElementById('polygonframe').childNodes[restartcheckpoint.length-1].nodeType = 'button';
+                    //在右边的section加button
+                    let sec = document.getElementById("sec");
+                    let newNode = document.createElement("input");
+                             //newNode.nodeName = 'input';
+                    newNode.setAttribute('type','button');
+                    newNode.setAttribute('value',"Polygon"+(restartcheckpoint.length-1)+"");
+                    newNode.onclick = function(event){
+                        
+                    }
+                    sec.appendChild(newNode);
+                    //
                 }
                 else {
                     restartsignal=true;//重新加点，preview继续
@@ -262,6 +252,8 @@
                 if(pointscurrent.length==currentlooker-1){
                     restartcheckpoint.pop();
                     currentlooker = restartcheckpoint[restartcheckpoint.length-1];//checked ok
+                    let sec = document.getElementById("sec");
+                    sec.removeChild(sec.lastChild);
                 }
                 stopdraw = false;//开启preview
                 if(pointscurrent.length<=1){
@@ -336,7 +328,6 @@
                 }
                 ctx.stroke();
                 ctx.closePath();
-                //ctx.fill();
             }
         }
 
