@@ -11,6 +11,10 @@
         <input type="button" value="Blue" id="blue"/>
         <input type="button" value="Black"  id="black"/>
         <input type="button" value="ClearCanvas" id = 'clearbtn'/>
+        <div>
+            <iframe id="polygonframe">
+            </iframe>
+        </div>
     </div>
     <style type="text/css">
         h1{
@@ -50,6 +54,15 @@
             background-color: white;
             border: 3px dashed red;
         }
+        #polygonframe{
+            marginheight: 80px;
+            marginheight: 60px;
+            position: absolute;
+            margin-left: 1000px;
+            margin-top: 100px;
+            scrolling: auto;
+            frameborder: 1;
+        }
     </style>
     <canvas  width="800px" height ="600px"></canvas>
     <script>
@@ -58,7 +71,7 @@
         btn.onclick = function(event) {
             pointscurrent.length=0;
             previewpoint.length=0;
-            restartcheckpoint.length=0;
+            restartcheckpoint=[0];
             init();
             setTimeout(function (){alert("canvas cleared!")},100);
             btn.style.backgroundColor= 'yellow';
@@ -101,10 +114,11 @@
         let canvas = document.querySelector("canvas");
         pointscurrent = [];//[[x0,y0],[x1,y1]]
         previewpoint = [];
-        restartcheckpoint = [];//记录每个新的多边形的起始点
+        restartcheckpoint = [0];//记录每个新的多边形的起始点
         let currentlooker=0;
         let stopdraw = false;
         let restartsignal = true;//preview重新有效的signal
+        let validdraw = true;//是否是一次正确的绘画（不相交，不在别的多边形里）
         //事件处理程序管理工具
         let EventUtil = {
             addHandler: function(element,type,handler) {
@@ -120,19 +134,9 @@
                 }else{
                     element["on"+type]=null;
                 }
-            },
-            /*
-            getEvent: function(event){
-                return event? event : window.event;
             }
-            */
-
         }
-
-        //利用EventUtil为事件分配处理函数
-        //EventUtil.addHandler(canvas,"mouseup",onMouseUp);
         EventUtil.addHandler(canvas,"mousemove",onMouseMove);
-        //EventUtil.addHandler(canvas,"dblclick",onDoubleClick);
         EventUtil.addHandler(canvas,"mousedown",onMouseDown);
         EventUtil.addHandler(canvas, "contextmenu", (evt) => evt.preventDefault());
         EventUtil.addHandler(canvas,"load",onLoad);
@@ -142,22 +146,48 @@
         }
 
 
-        function init() {
+        function init() {//reset
             currentlooker=0;
             stopdraw = false;
             restartsignal = true;
+            validdraw=true;
         }
         /**
          * mouseup做一个preview
          * @param event
          */
         function onMouseMove(event) {
+            validdraw=true;
             if(pointscurrent.length>=1&&restartsignal) {
                 previewpoint[0]=event.offsetX;
                 previewpoint[1]=event.offsetY;
-                if(magnettofirst(previewpoint[0],previewpoint[1])){//如果吸附了则preview吸附的情况
+                let magneted = magnettofirst(previewpoint[0],previewpoint[1])
+                if(magneted){//如果吸附了则preview吸附的情况
                     previewpoint[0]=pointscurrent[currentlooker][0];
                     previewpoint[1]=pointscurrent[currentlooker][1];
+                }
+                if(pointscurrent.length>=3) {
+                    for (let x = currentlooker; x < pointscurrent.length - 2; x++) {
+                        if(magneted){
+                            if(x==currentlooker){
+                                continue;
+                            }
+                            if (isIntersect(pointscurrent[x], pointscurrent[x + 1], pointscurrent[pointscurrent.length - 1], previewpoint)) {
+                                validdraw = false;
+                                console.log("scene 2");
+                                break;
+                            }
+                        }
+                        else {
+                            if ((currentlooker!=pointscurrent.length)&&isIntersect(pointscurrent[x], pointscurrent[x + 1], pointscurrent[pointscurrent.length - 1], previewpoint)) {
+                                validdraw = false;
+                                console.log("scene 1");
+                                console.log(pointscurrent);
+                                console.log(previewpoint);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -167,25 +197,40 @@
                 if(stopdraw){
                     stopdraw = false;
                 }
-                if(pointscurrent.length!=currentlooker&&magnettofirst(event.offsetX,event.offsetY)){
-                    pointscurrent.push([pointscurrent[currentlooker][0],pointscurrent[currentlooker][1]]);
+                if(pointscurrent.length!=currentlooker&&magnettofirst(event.offsetX,event.offsetY)&&validdraw){
+                    pointscurrent.push([pointscurrent[currentlooker][0],pointscurrent[currentlooker][1]]);//push进去终止点（也是初始点）
                     currentlooker = pointscurrent.length;
                     restartcheckpoint.push(currentlooker);
-                    previewpoint.length=0;
-                    restartsignal=false;//多边形结束，preview暂停
+                    stopdraw = true;
+                    //let showbutton = document.createElement('input');
+                    //document.getElementById('polygonframe').appendChild(showbutton);
+                    //document.getElementById('polygonframe').childNodes[restartcheckpoint.length-1].nodeType = 'button';
                 }
                 else {
                     restartsignal=true;//重新加点，preview继续
-                    pointscurrent.push([event.offsetX, event.offsetY]);
+                    if(validdraw) {
+                        pointscurrent.push([event.offsetX, event.offsetY]);
+                    }
                 }
             }
+            //一旦闭合
             else if(event.button == 2){
                 pointscurrent.pop();
-                stopdraw = true;
+                if(pointscurrent.length==currentlooker-1){
+                    restartcheckpoint.pop();
+                    currentlooker = restartcheckpoint[restartcheckpoint.length-1];//checked ok
+                }
+                stopdraw = false;//开启preview
+                if(pointscurrent.length<=1){
+                    pointscurrent = [];//[[x0,y0],[x1,y1]]
+                    previewpoint = [];
+                    restartcheckpoint = [0];
+                    init();
+                }
+                if(pointscurrent.length==currentlooker) {//如果刚好画完一个多边形，关闭preview
+                    stopdraw=true;
+                }
             }
-            console.log(pointscurrent);
-            console.log(currentlooker);
-            console.log(restartcheckpoint);
         }
 
         let ctx = canvas.getContext('2d');
@@ -194,11 +239,33 @@
         //判断是否能吸附到第一个点上，返回一个boolean值
         function magnettofirst(x,y){
             if(pointscurrent.length>=3){
-                if((x-pointscurrent[currentlooker][0])**2+(y-pointscurrent[currentlooker][1])**2<30){
+                if(!pointscurrent[currentlooker]){
+                }
+                else if((x-pointscurrent[currentlooker][0])**2+(y-pointscurrent[currentlooker][1])**2<30){
                     return true;
                 }
             }
             return false;
+        }
+
+        //向量叉乘
+        function crossproduct(x1,y1,x2,y2){
+            return x1*y2-y1*x2;
+        }
+
+        //向量叉乘判断是否相交
+        function isIntersect(p1,p2,p3,p4){//line1:p1-p2 line2:p3-p4
+            let vec_ac = [p3[0]-p1[0],p3[1]-p1[1]];
+            let vec_ad = [p4[0]-p1[0],p4[1]-p1[1]];
+            let vec_ab = [p2[0]-p1[0],p2[1]-p1[1]];
+            let vec_da = [p1[0]-p4[0],p1[1]-p4[1]];
+            let vec_db = [p2[0]-p4[0],p2[1]-p4[1]];
+            let vec_dc = [p3[0]-p4[0],p3[1]-p4[1]];
+            let cross_ac_ab = crossproduct(vec_ac[0],vec_ac[1],vec_ab[0],vec_ab[1]);
+            let cross_ad_ab = crossproduct(vec_ad[0],vec_ad[1],vec_ab[0],vec_ab[1]);
+            let cross_da_dc = crossproduct(vec_da[0],vec_da[1],vec_dc[0],vec_dc[1]);
+            let cross_db_dc = crossproduct(vec_db[0],vec_db[1],vec_dc[0],vec_dc[1]);
+            return (cross_ac_ab*cross_ad_ab<=0)&&(cross_da_dc*cross_db_dc<=0);
         }
         /**
          *
