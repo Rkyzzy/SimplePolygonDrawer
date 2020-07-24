@@ -11,6 +11,7 @@
         <input type="button" value="Blue" id="blue"/>
         <input type="button" value="Black"  id="black"/>
         <input type="button" value="ClearCanvas" id = 'clearbtn'/>
+        <input type="button" value="Dashed" id="dsh"/>
         <div>
             <iframe id="polygonframe">
             </iframe>
@@ -53,6 +54,13 @@
             position: absolute;
             background-color: white;
             border: 3px dashed red;
+        }
+        #dsh{
+            margin-top: 20px;
+            margin-left: 950px;
+            position: absolute;
+            background-color: white;
+            border: 1px solid black;
         }
         #polygonframe{
             marginheight: 80px;
@@ -111,6 +119,17 @@
             blacklinebtn.style.border = "3px dashed red";
         }
 
+        let dshbtn = document.getElementById('dsh');
+        dshbtn.onclick = function(event){
+            if(dshbtn.getAttribute('value')=='Dashed'){
+                ctx.setLineDash([8, 8]);
+                dshbtn.setAttribute('value','Normal');
+            }
+            else{
+                ctx.setLineDash([]);
+                dshbtn.setAttribute('value','Dashed');
+            }
+        }
         let canvas = document.querySelector("canvas");
         pointscurrent = [];//[[x0,y0],[x1,y1]]
         previewpoint = [];
@@ -189,6 +208,10 @@
                         }
                     }
                 }
+                if(previewpoint[0]==pointscurrent[pointscurrent.length-1][0]
+                &&previewpoint[1]==pointscurrent[pointscurrent.length-1][1]){
+                    validdraw=true;
+                }
             }
         }
 
@@ -234,7 +257,9 @@
         }
 
         let ctx = canvas.getContext('2d');
-        ctx.strokeStyle = "black"
+        ctx.strokeStyle = "black";
+        //ctx.fillStyle="#0000ff";
+        //ctx.setLineDash([8, 8]);
 
         //判断是否能吸附到第一个点上，返回一个boolean值
         function magnettofirst(x,y){
@@ -291,6 +316,7 @@
                 }
                 ctx.stroke();
                 ctx.closePath();
+                //ctx.fill();
             }
         }
 
